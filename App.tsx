@@ -75,6 +75,9 @@ export default function Home() {
           userId={userId}
           conversationId={conversationId}
           enabledPlacementCodes={[PLACEMENT_CODE]}
+          onDebugEvent={(event, data) => {
+            console.log(event, data);
+          }}
         >
           <ScrollView style={styles.messages}>
             {messages.map((msg) => (
