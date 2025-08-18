@@ -26,10 +26,12 @@ export const PUBLISHER_TOKEN = "<your publisher token>";
 export const PLACEMENT_CODE = "<your placement code>";
 ```
 
-5. Run the development server
+5. Run the development server (iOS or Android)
 
 ```bash
-npx expo start
+npm run ios
+npm run android
+
 ```
 
 6. Click `i` to  open the iOS simulator or `a` to open the Android emulator.
