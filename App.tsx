@@ -59,6 +59,8 @@ export default function Home() {
     }, 5000);
   };
 
+  const [isVisible, setIsVisible] = useState(true);
+
   return (
     <SafeAreaView style={[styles.safeArea, theme === "dark" && styles.darkTheme]}>
       <View style={styles.container}>
@@ -75,8 +77,10 @@ export default function Home() {
           userId={userId}
           conversationId={conversationId}
           enabledPlacementCodes={[PLACEMENT_CODE]}
-          onEvent={(event: any) => {
-            console.log("event", event);
+          onEvent={({ name }: { name: string }) => {
+            if (name === 'ad.render-started') {
+              setIsVisible(true);
+            } 
           }}
         >
           <ScrollView style={styles.messages}>
@@ -89,12 +93,28 @@ export default function Home() {
                   {msg.content}
                 </Text>
 
-                <InlineAd
-                  code={PLACEMENT_CODE}
-                  messageId={msg.id}
-                  theme={theme}
-                  wrapper={(children: React.ReactNode) => <View style={{ /* ... */}}>{children}</View>}
-                />
+                <View
+                  style={{
+                    display: isVisible ? undefined : "none",
+                  }}
+                >
+                  <InlineAd
+                    code={PLACEMENT_CODE}
+                    messageId={msg.id}
+                    theme={theme}
+                    wrapper={(children: React.ReactNode) => (
+                      <View>
+                        <Button 
+                          title="Close" 
+                          onPress={() => {
+                            setIsVisible(false);
+                          }} 
+                        />
+                        {children}
+                      </View>
+                    )}
+                  />
+                </View>
               </View>
             ))}
             {isLoading && <Text>Loading...</Text>}
