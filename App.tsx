@@ -75,8 +75,8 @@ export default function Home() {
           userId={userId}
           conversationId={conversationId}
           enabledPlacementCodes={[PLACEMENT_CODE]}
-          onDebugEvent={(event, data) => {
-            console.log(event, data);
+          onEvent={(event: any) => {
+            console.log("event", event);
           }}
         >
           <ScrollView style={styles.messages}>
@@ -93,6 +93,7 @@ export default function Home() {
                   code={PLACEMENT_CODE}
                   messageId={msg.id}
                   theme={theme}
+                  wrapper={(children: React.ReactNode) => <View style={{ /* ... */}}>{children}</View>}
                 />
               </View>
             ))}
