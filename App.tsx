@@ -8,6 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Platform,
+  Pressable,
 } from "react-native";
 import { AdsProvider, InlineAd } from "@kontextso/sdk-react-native";
 import { PUBLISHER_TOKEN, PLACEMENT_CODE } from "./constants";
@@ -40,11 +41,13 @@ const getRandomId = () => {
   return Date.now() + Math.random().toString(36).substring(2, 15);
 };
 
-const startLoadingAd = (callback: () => void, timeout: number) => {
-  // setTimeout(callback, timeout);
-};
+export const startLoadingAd = (timeOutCb?: any, msTime?: number) => {
+  KontextAdSensorInfo.ad_state = 'loading'
+  clearTimeout(KontextAdSensorInfo.ad_state_timer)
+  KontextAdSensorInfo.ad_state_timer = setTimeout(timeOutCb, msTime)
+}
 
-const updateKontextAdsStatusToBackEnd = (status: boolean, characterId: number) => {
+const updateKontextAdsStatusToBackEnd = async(status: boolean, characterId: number) => {
   console.log("updateKontextAdsStatusToBackEnd", status, characterId);
 };
 
@@ -78,7 +81,7 @@ export default function Home() {
   const [kontextAdsMsgListShouldUpdate, setKontextAdsMsgListShouldUpdate] = useState(false);
   const [loadKontextAdsEnable, setLoadKontextAdsEnable] = useState(false);
   const [msgForKontextAds, setMsgForKontextAds] = useState<Message[]>([]);
-  const [isShowLoadingText, setIsShowLoadingText] = useState(false);
+  const [isShowLoadingText] = useState(false);
 
   const character={
     name: 'John Doe',
@@ -179,7 +182,7 @@ export default function Home() {
         </View>
 
         <AdsProvider
-          messages={messages}
+          messages={msgForKontextAds}
           publisherToken={PUBLISHER_TOKEN}
           userId={userId}
           conversationId={getRandomId()}
@@ -196,6 +199,7 @@ export default function Home() {
             tags: character.tags,
           }}
           onEvent={(ad: any) => {
+            console.log("ad", ad);
             // 广告事件的回调。
             const PublicAd = ad.payload
             if (ad.name == 'ad.error' || ad.name == 'ad.no-fill') {
@@ -203,7 +207,6 @@ export default function Home() {
               if (setKontextAdSensorInfoState('fail')) {
                 setKontextAdSensorInfoState('init')
                 updateKontextAdsStatusToBackEnd(false, character.id)
-                const errorMsg = ad.name == 'ad.error' ? 'llm_error' : 'no_fill'
               }
             } else if (ad.name == 'ad.clicked') {
               // 点击广告
@@ -219,13 +222,13 @@ export default function Home() {
                 const nowTime = new Date().getTime()
                 KontextAdSensorInfo.is_fresh = false
                 KontextAdSensorInfo.last_ad_show_time = nowTime
-                updateKontextAdsStatusToBackEnd(true, 123)
+                updateKontextAdsStatusToBackEnd(true, character.id)
               }
             }
           }}
         >
           <ScrollView style={styles.messages}>
-            {msgForKontextAds.map((msg) => (
+            {messages.map((msg) => (
               <View key={msg.id} style={styles.message}>
                 <Text style={[styles.role, theme === "dark" && styles.darkText]}>
                   {msg.role}:
@@ -237,7 +240,33 @@ export default function Home() {
                 <InlineAd
                   code={PLACEMENT_CODE}
                   messageId={msg.id}
-                  theme={theme}
+                  theme={'light'}
+                  css={`
+                    [data-mb-theme] {
+                      --mb-font-size: 11px;
+                    }
+                  `}
+                  wrapper={(children: React.ReactNode) => (
+                    <View>
+                      <View>
+                        <Text>
+                          Sponsor
+                        </Text>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Close ad"
+                        onPress={async () => {
+                          setMsgForKontextAds([])
+                          setKontextAdsMsgListShouldUpdate(false)
+                        }}
+                        hitSlop={8}
+                      >
+                        <Text>Close</Text>
+                      </Pressable>
+                      {children}
+                    </View>
+                  )}
                 />
               </View>
             ))}
