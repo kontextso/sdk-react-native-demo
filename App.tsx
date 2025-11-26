@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,17 @@ interface Message {
 const getRandomId = () => {
   return Date.now() + Math.random().toString(36).substring(2, 15);
 };
+
+const InlineAdDebug = (props: React.ComponentProps<typeof InlineAd>) => {
+  useEffect(() => {
+    console.debug('✅ [InlineAd] MOUNT', props.messageId, props.code, props.message)
+    return () => {
+      console.debug('❌ [InlineAd] UNMOUNT', props.messageId, props.code, props.message)
+    }
+  }, [props.messageId, props.code])
+
+  return <InlineAd {...props} />
+}
 
 export default function Home() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -56,7 +67,7 @@ export default function Home() {
           createdAt: new Date(),
         },
       ]);
-    }, 5000);
+    }, 3000);
   };
 
   return (
@@ -73,11 +84,16 @@ export default function Home() {
           messages={messages}
           publisherToken={PUBLISHER_TOKEN}
           userId={userId}
-          userEmail="test@test.com"
           conversationId={conversationId}
           enabledPlacementCodes={[PLACEMENT_CODE]}
           onDebugEvent={(event, data) => {
-            console.log(event, data);
+            if (event === 'format-update-state') {
+              return null;
+            }
+            if (data?.message?.type === 'update-dimensions-iframe') {
+              return null;
+            }
+            console.log("EVENT 🚗🚗🚗", event, "TIME:", performance.now(), data?.message);
           }}
         >
           <ScrollView style={styles.messages}>
@@ -90,10 +106,18 @@ export default function Home() {
                   {msg.content}
                 </Text>
 
-                <InlineAd
+                <InlineAdDebug
                   code={PLACEMENT_CODE}
                   messageId={msg.id}
                   theme={theme}
+                  message={msg}
+                  wrapper={(children: React.ReactNode) => {
+                    return (
+                      <View>
+                        {children}
+                      </View>
+                    )
+                  }}
                 />
               </View>
             ))}
