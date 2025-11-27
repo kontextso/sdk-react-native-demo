@@ -35,10 +35,11 @@ const InlineAdDebug = (props: React.ComponentProps<typeof InlineAd>) => {
 }
 
 export default function Home() {
+  const conversationId = 'conversation-123';
+  const userId = 'user-123';
+
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId] = useState(() => getRandomId());
-  const [userId] = useState(() => getRandomId());
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
@@ -53,6 +54,7 @@ export default function Home() {
     };
 
     setMessages((prev) => [...prev, newMessage]);
+    console.log('🚗🚗🚗 USER MESSAGE ADDED')
     setInput("");
     setIsLoading(true);
 
@@ -67,6 +69,7 @@ export default function Home() {
           createdAt: new Date(),
         },
       ]);
+      console.log('🚗🚗🚗 ASSISTANT MESSAGE ADDED')
     }, 3000);
   };
 
@@ -87,13 +90,7 @@ export default function Home() {
           conversationId={conversationId}
           enabledPlacementCodes={[PLACEMENT_CODE]}
           onDebugEvent={(event, data) => {
-            if (event === 'format-update-state') {
-              return null;
-            }
-            if (data?.message?.type === 'update-dimensions-iframe') {
-              return null;
-            }
-            console.log("EVENT 🚗🚗🚗", event, "TIME:", performance.now(), data?.message);
+            console.log("🚗 EVENT", event, "MESSAGE ID:", data?.params?.messageId, "TIME:", performance.now(), data?.params);
           }}
         >
           <ScrollView style={styles.messages}>
