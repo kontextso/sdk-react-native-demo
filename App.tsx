@@ -39,11 +39,8 @@ export default function Home() {
     });
     return ads.createSession({
       conversationId: conversationId,
-    }).getInstance()
+    })
   });
-
-  console.log(session);
-
 
   const onSubmit = () => {
     if (!input.trim()) return;
@@ -57,10 +54,13 @@ export default function Home() {
 
     setMessages((prev) => [...prev, newMessage]);
 
-    session.addMessage(newMessage);
-    session.preload().requestAd().then((arg: any) => {
-      console.debug('PRELOAD RESULT', arg)
-    })
+    session.addMessage(newMessage)
+      .then((arg: any) => {
+        console.debug('ADD USER MESSAGE RESULT', arg)
+      })
+      .catch((error: any) => {
+        console.error('ADD USER MESSAGE ERROR', error)
+      })
 
     setInput("");
     setIsLoading(true);
@@ -75,7 +75,13 @@ export default function Home() {
         createdAt: new Date(),
       }
 
-      session.addMessage(message);
+      session.addMessage(message)
+        .then((arg: any) => {
+          console.debug('ADD ASSISTANT MESSAGE RESULT', arg)
+        })
+        .catch((error: any) => {
+          console.error('ADD ASSISTANT MESSAGE ERROR', error)
+        })
       
       setMessages((prev) => [
         ...prev,
@@ -106,7 +112,7 @@ export default function Home() {
 
                 <InlineAd
                   messageId={msg.id}
-                  session={session}
+                  session={session.getInstance()}
                   onDebugEvent={(event, data) => {
                     console.log(event, data);
                   }}
