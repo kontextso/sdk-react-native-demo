@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   Platform,
 } from "react-native";
-import { AdsProvider, InlineAd } from "@kontextso/sdk-react-native";
+import { KontextAds, InlineAd } from "@kontextso/sdk-react-native";
 import { PUBLISHER_TOKEN, PLACEMENT_CODE } from "./constants";
 
 interface Message {
@@ -26,10 +26,24 @@ const getRandomId = () => {
 export default function Home() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId] = useState(() => getRandomId());
-  const [userId] = useState(() => getRandomId());
+  const [conversationId] = useState(() => 'conv-123');
+  const [userId] = useState(() => 'user-123');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+
+  const [session] = useState<any>(() => {
+    const ads = KontextAds({
+      publisherToken: PUBLISHER_TOKEN,
+      userId: userId,
+      // adServerUrl: 'http://localhost:3002',
+    });
+    return ads.createSession({
+      conversationId: conversationId,
+    }).getInstance()
+  });
+
+  console.log(session);
+
 
   const onSubmit = () => {
     if (!input.trim()) return;
@@ -42,21 +56,32 @@ export default function Home() {
     };
 
     setMessages((prev) => [...prev, newMessage]);
+
+    session.addMessage(newMessage);
+    session.preload().requestAd().then((arg: any) => {
+      console.debug('PRELOAD RESULT', arg)
+    })
+
     setInput("");
     setIsLoading(true);
 
     setTimeout(() => {
       setIsLoading(false);
+     
+      const message = {
+        id: getRandomId(),
+        role: "assistant",
+        content: "This is a test response from the assistant.",
+        createdAt: new Date(),
+      }
+
+      session.addMessage(message);
+      
       setMessages((prev) => [
         ...prev,
-        {
-          id: getRandomId(),
-          role: "assistant",
-          content: "This is a test response from the assistant.",
-          createdAt: new Date(),
-        },
+        message,
       ]);
-    }, 5000);
+    }, 1000);
   };
 
   return (
@@ -69,17 +94,6 @@ export default function Home() {
           />
         </View>
 
-        <AdsProvider
-          messages={messages}
-          publisherToken={PUBLISHER_TOKEN}
-          userId={userId}
-          userEmail="test@test.com"
-          conversationId={conversationId}
-          enabledPlacementCodes={[PLACEMENT_CODE]}
-          onDebugEvent={(event, data) => {
-            console.log(event, data);
-          }}
-        >
           <ScrollView style={styles.messages}>
             {messages.map((msg) => (
               <View key={msg.id} style={styles.message}>
@@ -91,9 +105,11 @@ export default function Home() {
                 </Text>
 
                 <InlineAd
-                  code={PLACEMENT_CODE}
                   messageId={msg.id}
-                  theme={theme}
+                  session={session}
+                  onDebugEvent={(event, data) => {
+                    console.log(event, data);
+                  }}
                 />
               </View>
             ))}
@@ -112,7 +128,6 @@ export default function Home() {
             />
             <Button title="Send" onPress={onSubmit} disabled={isLoading} />
           </View>
-        </AdsProvider>
       </View>
     </SafeAreaView>
   );
