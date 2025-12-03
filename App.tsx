@@ -31,6 +31,8 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
 
+  const [adMessageId, setAdMessageId] = useState<string | null>(null);
+
   const [session] = useState<any>(() => {
     const ads = KontextAds({
       publisherToken: PUBLISHER_TOKEN,
@@ -52,6 +54,8 @@ export default function Home() {
     };
 
     setMessages((prev) => [...prev, newMessage]);
+
+    setAdMessageId(null);
 
     session.addMessage(newMessage)
       .then((arg: any) => {
@@ -81,7 +85,8 @@ export default function Home() {
         .catch((error: any) => {
           console.error('ADD ASSISTANT MESSAGE ERROR', error)
         })
-      
+      setAdMessageId(message.id);
+
       setMessages((prev) => [
         ...prev,
         message,
@@ -108,16 +113,15 @@ export default function Home() {
                 <Text style={[styles.content, theme === "dark" && styles.darkText]}>
                   {msg.content}
                 </Text>
-
-                <InlineAd
-                  messageId={msg.id}
-                  session={session.getInstance()}
-                  onDebugEvent={(event, data) => {
-                    console.log(event, data);
-                  }}
-                />
               </View>
             ))}
+            {adMessageId && <InlineAd
+              messageId={adMessageId}
+              session={session.getInstance()}
+              onDebugEvent={(event, data) => {
+                console.log(event, data);
+              }}
+            />}
             {isLoading && <Text>Loading...</Text>}
           </ScrollView>
 
