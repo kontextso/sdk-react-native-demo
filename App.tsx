@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { KontextAds, InlineAd } from "@kontextso/sdk-react-native";
-import { PUBLISHER_TOKEN, PLACEMENT_CODE } from "./constants";
+import { PUBLISHER_TOKEN } from "./constants";
 
 interface Message {
   id: string;
@@ -35,7 +35,6 @@ export default function Home() {
     const ads = KontextAds({
       publisherToken: PUBLISHER_TOKEN,
       userId: userId,
-      // adServerUrl: 'http://localhost:3002',
     });
     return ads.createSession({
       conversationId: conversationId,
