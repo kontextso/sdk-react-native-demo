@@ -70,6 +70,7 @@ export default function Home() {
         </View>
 
         <AdsProvider
+          // adServerUrl="http://192.168.18.48:3002"
           messages={messages}
           publisherToken={PUBLISHER_TOKEN}
           userId={userId}
@@ -77,7 +78,7 @@ export default function Home() {
           conversationId={conversationId}
           enabledPlacementCodes={[PLACEMENT_CODE]}
           onDebugEvent={(event, data) => {
-            console.log(event, data);
+            // console.log(event, data);
           }}
         >
           <ScrollView style={styles.messages}>
