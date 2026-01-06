@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   Platform,
 } from "react-native";
 import { AdsProvider, InlineAd } from "@kontextso/sdk-react-native";
-import { PUBLISHER_TOKEN, PLACEMENT_CODE } from "./constants";
+import { PUBLISHER_TOKEN, PLACEMENT_CODE, USERCENTRICS_SETTINGS_ID } from "./constants";
+import { Usercentrics, UsercentricsOptions, UsercentricsLoggerLevel } from '@usercentrics/react-native-sdk';
 
 interface Message {
   id: string;
@@ -30,6 +31,35 @@ export default function Home() {
   const [userId] = useState(() => getRandomId());
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+
+  const collectConsent = async () => {
+   const userResponse = await Usercentrics.showFirstLayer()
+   const tcfData = await Usercentrics.getTCFData()
+   console.log(JSON.stringify(tcfData, null, 2))
+  }
+
+  useEffect(() => {
+    let options = new UsercentricsOptions({ 
+      settingsId: USERCENTRICS_SETTINGS_ID,
+      loggerLevel: UsercentricsLoggerLevel.debug,
+    });
+    Usercentrics.configure(options);
+    Usercentrics.clearUserSession();
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      const status = await Usercentrics.status()
+      if (status.shouldCollectConsent) {
+        collectConsent()
+    } else {
+        // Apply consent with status.consents
+    }
+    }, 1000);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const onSubmit = () => {
     if (!input.trim()) return;
