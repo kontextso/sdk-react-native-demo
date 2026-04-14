@@ -34,9 +34,6 @@ npm run android
 
 ```
 
-6. Click `i` to  open the iOS simulator or `a` to open the Android emulator.
-
-
 ## Learn More
 
 To learn more about the Kontext React Native SDK, check out the following resource:
