@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,41 @@ import {
   SafeAreaView,
   Platform,
 } from "react-native";
-import { AdsProvider, InlineAd } from "@kontextso/sdk-react-native";
+import { AdsProvider, InlineAd, useAds } from "@kontextso/sdk-react-native";
 import { PUBLISHER_TOKEN, PLACEMENT_CODE } from "./constants";
+
+/**
+ * Fires `user.typing.started` exactly once per typing session.
+ *
+ * A "session" is reset whenever `resetDep` changes — in the demo we
+ * pass `isLoading`, so the flag resets on every submit (false → true)
+ * and again when the assistant response arrives (true → false).
+ * Also resets automatically when the input becomes empty (backspace
+ * all), so the next character fires again.
+ *
+ * Handles paste correctly: it fires on any 0 → non-empty transition,
+ * not just single-character typing.
+ */
+function useUserTypingTracker(resetDep: unknown) {
+  const { sendUserEvent } = useAds();
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    firedRef.current = false;
+  }, [resetDep]);
+
+  return (value: string) => {
+    if (value.length === 0) {
+      firedRef.current = false;
+      return;
+    }
+    if (!firedRef.current) {
+      sendUserEvent("user.typing.started");
+      firedRef.current = true;
+      console.log("start typing");
+    }
+  };
+}
 
 interface Message {
   id: string;
@@ -100,21 +133,50 @@ export default function Home() {
             {isLoading && <Text>Loading...</Text>}
           </ScrollView>
 
-          <View style={styles.footer}>
-            <TextInput
-              style={[styles.input, theme === "dark" && styles.darkInput]}
-              value={input}
-              onChangeText={setInput}
-              placeholder="Type your message here..."
-              placeholderTextColor={theme === "dark" ? "#888" : "#ccc"}
-              multiline
-              editable={!isLoading}
-            />
-            <Button title="Send" onPress={onSubmit} disabled={isLoading} />
-          </View>
+          <UserInputBar
+            theme={theme}
+            isLoading={isLoading}
+            input={input}
+            setInput={setInput}
+            onSubmit={onSubmit}
+          />
         </AdsProvider>
       </View>
     </SafeAreaView>
+  );
+}
+
+function UserInputBar({
+  theme,
+  isLoading,
+  input,
+  setInput,
+  onSubmit,
+}: {
+  theme: "light" | "dark";
+  isLoading: boolean;
+  input: string;
+  setInput: (v: string) => void;
+  onSubmit: () => void;
+}) {
+  const notifyTyping = useUserTypingTracker(isLoading);
+
+  return (
+    <View style={styles.footer}>
+      <TextInput
+        style={[styles.input, theme === "dark" && styles.darkInput]}
+        value={input}
+        onChangeText={(value) => {
+          setInput(value);
+          notifyTyping(value);
+        }}
+        placeholder="Type your message here..."
+        placeholderTextColor={theme === "dark" ? "#888" : "#ccc"}
+        multiline
+        editable={!isLoading}
+      />
+      <Button title="Send" onPress={onSubmit} disabled={isLoading} />
+    </View>
   );
 }
 
