@@ -9,7 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@kontextso/sdk-react-native": "^3.4.0",
+    "@kontextso/sdk-react-native": "^3.4.1",
     "@react-native-community/netinfo": "11.5.2",
     "expo": "^55.0.15",
     "expo-status-bar": "~55.0.5",
